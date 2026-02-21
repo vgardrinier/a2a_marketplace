@@ -34,18 +34,6 @@ export default async function DashboardLayout({
                 >
                   Workers
                 </a>
-                <a
-                  href="/jobs"
-                  className="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-500 hover:text-gray-900"
-                >
-                  Jobs
-                </a>
-                <a
-                  href="/admin"
-                  className="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-500 hover:text-gray-900"
-                >
-                  Admin
-                </a>
               </div>
             </div>
           </div>

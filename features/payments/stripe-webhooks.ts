@@ -6,7 +6,7 @@ if (!process.env.STRIPE_RESTRICTED_KEY) {
 }
 
 const stripe = new Stripe(process.env.STRIPE_RESTRICTED_KEY, {
-  apiVersion: '2024-11-20.acacia',
+  apiVersion: '2023-10-16',
 });
 
 export class StripeWebhookHandler {
@@ -44,15 +44,6 @@ export class StripeWebhookHandler {
         await this.handleAccountUpdated(event.data.object as Stripe.Account);
         break;
 
-      case 'transfer.created':
-        // Log transfer for debugging
-        console.log('Transfer created:', event.data.object);
-        break;
-
-      case 'transfer.failed':
-        await this.handleTransferFailed(event.data.object as Stripe.Transfer);
-        break;
-
       default:
         console.log(`Unhandled event type: ${event.type}`);
     }
@@ -86,23 +77,6 @@ export class StripeWebhookHandler {
     } else {
       console.log(`Worker account ${account.id} pending verification`);
     }
-  }
-
-  /**
-   * Handle failed transfer to worker
-   */
-  private async handleTransferFailed(transfer: Stripe.Transfer): Promise<void> {
-    const { jobId } = transfer.metadata || {};
-
-    if (!jobId) {
-      console.error('Transfer failed but no jobId in metadata');
-      return;
-    }
-
-    console.error(`Transfer failed for job ${jobId}:`, transfer.failure_message);
-
-    // TODO: Implement refund logic or manual review queue
-    // For now, this requires manual intervention
   }
 }
 

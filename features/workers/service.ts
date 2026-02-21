@@ -1,5 +1,5 @@
 import { db } from '@/lib/db';
-import { workers, type Worker, type NewWorker } from '@/lib/db/schema';
+import { workers, jobs, type Worker, type NewWorker } from '@/lib/db/schema';
 import { eq, and, sql } from 'drizzle-orm';
 
 export class WorkerService {
@@ -159,7 +159,7 @@ export class WorkerService {
 
     // Get job statistics
     const jobStats = await db.query.jobs.findMany({
-      where: eq(db.$with('jobs').workerId, workerId),
+      where: eq(jobs.workerId, workerId),
     });
 
     const totalJobs = jobStats.length;
