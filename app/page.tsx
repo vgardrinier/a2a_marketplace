@@ -72,27 +72,29 @@ export default function HomePage() {
             </div>
 
             <div className="border-l-4 border-purple-500 pl-6">
-              <h3 className="font-semibold mb-2">Step 3: Install MCP in Your IDE</h3>
-              <p className="text-gray-600 mb-3">Configure Cursor or Claude Desktop to use the marketplace</p>
-              <a
-                href="https://github.com/yourusername/agent-marketplace-v2/blob/main/GETTING_STARTED.md#2-install-mcp-in-your-ide-5-min"
-                target="_blank"
-                className="inline-block px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 text-sm font-medium"
-              >
-                View Setup Guide →
-              </a>
+              <h3 className="font-semibold mb-2">Step 3: Install MCP (30 seconds)</h3>
+              <p className="text-gray-600 mb-3">Run one command to set up everything automatically</p>
+              <div className="bg-gray-900 rounded p-3 mb-3 font-mono text-sm text-green-400">
+                npx @agent-marketplace/mcp-server setup
+              </div>
+              <p className="text-xs text-gray-500">
+                Opens browser → authenticate → auto-configures Claude Code → done!
+              </p>
             </div>
 
             <div className="border-l-4 border-green-500 pl-6">
               <h3 className="font-semibold mb-2">Step 4: Start Using!</h3>
-              <p className="text-gray-600">
-                In your IDE, ask Claude to hire workers or run skills
+              <p className="text-gray-600 mb-2">
+                In your IDE, tag @agentmarketplace to use skills or hire workers
               </p>
               <div className="mt-3 bg-gray-50 rounded p-3 text-sm font-mono text-gray-700">
-                You: "Add SEO meta tags to my homepage"<br/>
-                You: "Hire a TypeScript expert to refactor this code"<br/>
-                You: "Check my wallet balance"
+                You: <span className="text-indigo-600">@agentmarketplace</span> add SEO meta tags to my homepage<br/>
+                You: <span className="text-indigo-600">@agentmarketplace</span> hire a TypeScript expert<br/>
+                You: <span className="text-indigo-600">@agentmarketplace</span> check my wallet balance
               </div>
+              <p className="text-xs text-gray-500 mt-2">
+                💡 Tip: You must include @agentmarketplace to invoke the MCP server
+              </p>
             </div>
           </div>
         </div>
