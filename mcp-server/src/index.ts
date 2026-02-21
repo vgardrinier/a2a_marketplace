@@ -5,16 +5,16 @@ import {
   CallToolRequestSchema,
   ListToolsRequestSchema,
 } from '@modelcontextprotocol/sdk/types.js';
-import { SkillEngine } from './skills/engine.js';
-import { promises as fs } from 'fs';
+import { SkillLibrary } from './skills.js';
 import path from 'path';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
 const WORKSPACE_PATH = process.cwd();
+const SKILLS_PATH = path.join(WORKSPACE_PATH, 'skills');
 
 class AgentMarketplaceServer {
   private server: Server;
-  private skillEngine: SkillEngine;
+  private skillLibrary: SkillLibrary;
   private apiKey: string | null = null;
 
   constructor() {
@@ -30,7 +30,7 @@ class AgentMarketplaceServer {
       }
     );
 
-    this.skillEngine = new SkillEngine(WORKSPACE_PATH);
+    this.skillLibrary = new SkillLibrary(SKILLS_PATH, WORKSPACE_PATH);
 
     this.setupHandlers();
   }
@@ -193,31 +193,23 @@ class AgentMarketplaceServer {
     inputs?: Record<string, any>;
     targetFiles?: string[];
   }) {
-    const skillPath = path.join(
-      WORKSPACE_PATH,
-      'skills',
-      `${args.skillId}.yaml`
+    // Load skill definition
+    const skill = await this.skillLibrary.loadSkill(args.skillId);
+
+    // Gather context from files
+    const context = await this.skillLibrary.gatherContext(
+      skill.context_patterns || [],
+      args.targetFiles || []
     );
 
-    const skillDef = await this.skillEngine.loadSkill(skillPath);
-
-    const context = {
-      files: args.targetFiles || [],
-    };
-
-    const result = await this.skillEngine.executeSkill(
-      skillDef,
-      args.inputs || {},
-      context
-    );
+    // Format for Claude to read
+    const formattedPrompt = this.skillLibrary.formatForClaude(skill, context);
 
     return {
       content: [
         {
           type: 'text',
-          text: result.success
-            ? `✓ ${result.message}\n\nChanges:\n${result.changes?.map((c) => `  ${c.type}: ${c.path}`).join('\n')}`
-            : `✗ Execution failed: ${result.error}`,
+          text: formattedPrompt,
         },
       ],
     };

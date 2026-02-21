@@ -1,69 +1,81 @@
 skill:
   id: optimize-images
   name: Optimize Images
-  description: Compress and convert images to modern formats (WebP, AVIF)
+  description: Optimize images for web performance (Next.js Image, lazy loading, modern formats)
   category: performance
   pricing: free
-  author: marketplace
   version: 1.0.0
 
-  inputs:
-    target_format:
-      type: select
-      required: true
-      default: webp
-      description: Target image format
-      options:
-        - webp
-        - avif
-        - both
+  context_patterns:
+    - "**/*.tsx"
+    - "**/*.jsx"
+    - "**/*.html"
 
-    quality:
-      type: number
-      required: false
-      default: 80
-      description: Compression quality (0-100)
+  instructions: |
+    Optimize images for web performance.
 
-    max_width:
-      type: number
-      required: false
-      default: 1920
-      description: Maximum image width in pixels
+    Steps:
+    1. Replace <img> tags with optimized components:
+       - Next.js: Use <Image> from 'next/image'
+       - React: Use lazy loading attributes
+       - HTML: Add loading="lazy" and proper sizing
 
-  context_needed:
-    - description: Image files to optimize
-      pattern: "**/*.{jpg,jpeg,png}"
-      max_files: 20
+    2. Add proper sizing:
+       - Specify width and height to prevent layout shift
+       - Use responsive images (srcset, sizes)
+       - Add aspect ratio to prevent CLS
 
-  execution:
-    - step: for_each
-      items: ${context.files}
-      as: image
-      do:
-        - step: read_file
-          path: ${image.path}
-          save_as: image_data
+    3. Use modern formats:
+       - Suggest WebP conversion for better compression
+       - Use AVIF where supported
+       - Keep fallbacks for older browsers
 
-        - step: transform
-          source: ${image_data}
-          operation: compress_image
-          format: ${inputs.target_format}
-          quality: ${inputs.quality}
-          max_width: ${inputs.max_width}
-          save_as: optimized_image
+    4. Implement lazy loading:
+       - loading="lazy" for native lazy load
+       - Intersection Observer for custom loading
+       - Prioritize above-the-fold images
 
-        - step: write_file
-          path: ${image.path.replace(/\.(jpg|jpeg|png)$/, `.${inputs.target_format}`)}
-          content: ${optimized_image}
+    5. Optimize delivery:
+       - Use CDN for image hosting
+       - Compress images (suggest tools)
+       - Generate multiple sizes for responsive images
 
-        - step: update_references
-          old_path: ${image.path}
-          new_path: ${image.path.replace(/\.(jpg|jpeg|png)$/, `.${inputs.target_format}`)}
+  examples: |
+    **Before:**
+    ```tsx
+    <img src="/hero-image.jpg" alt="Hero" />
+    ```
 
-  validation:
-    - check: valid_images
-      files: ${context.files}
+    **After (Next.js):**
+    ```tsx
+    import Image from 'next/image';
 
-  success_message: "✓ Optimized ${context.files.length} image(s)"
+    <Image
+      src="/hero-image.jpg"
+      alt="Hero"
+      width={1200}
+      height={600}
+      priority // For above-the-fold images
+    />
 
-  estimated_time: 10
+    {/* For below-the-fold images */}
+    <Image
+      src="/product.jpg"
+      alt="Product"
+      width={400}
+      height={300}
+      loading="lazy"
+    />
+    ```
+
+    **After (React/HTML):**
+    ```tsx
+    <img
+      src="/hero-image.jpg"
+      alt="Hero"
+      width="1200"
+      height="600"
+      loading="lazy"
+      decoding="async"
+    />
+    ```

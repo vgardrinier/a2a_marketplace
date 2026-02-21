@@ -1,67 +1,97 @@
 skill:
   id: fix-eslint
   name: Fix ESLint Errors
-  description: Auto-fix ESLint errors and warnings
+  description: Automatically fix common ESLint errors and warnings
   category: code-quality
   pricing: free
-  author: marketplace
   version: 1.0.0
 
-  inputs:
-    fix_warnings:
-      type: boolean
-      required: false
-      default: true
-      description: Also fix warnings (not just errors)
+  context_patterns:
+    - "**/*.ts"
+    - "**/*.tsx"
+    - "**/*.js"
+    - "**/*.jsx"
 
-    rules_to_ignore:
-      type: multiselect
-      required: false
-      description: ESLint rules to skip
-      options:
-        - no-console
-        - no-unused-vars
-        - "@typescript-eslint/no-explicit-any"
-        - react/prop-types
+  instructions: |
+    Fix ESLint errors and warnings in the codebase.
 
-  context_needed:
-    - description: JavaScript/TypeScript files to fix
-      pattern: "**/*.{js,jsx,ts,tsx}"
-      max_files: 10
+    Common fixes:
+    1. **Unused variables:**
+       - Remove unused imports
+       - Remove unused variables
+       - Prefix intentionally unused params with underscore: _param
 
-  execution:
-    - step: for_each
-      items: ${context.files}
-      as: file
-      do:
-        - step: read_file
-          path: ${file.path}
-          save_as: file_content
+    2. **Missing dependencies:**
+       - Add missing dependencies to useEffect/useCallback
+       - Fix exhaustive-deps warnings
+       - Consider if dependency should be stable
 
-        - step: analyze_code
-          content: ${file_content}
-          lint: true
-          fix_warnings: ${inputs.fix_warnings}
-          ignore_rules: ${inputs.rules_to_ignore}
-          save_as: lint_results
+    3. **React hooks rules:**
+       - Move hooks to top level (not in conditions/loops)
+       - Fix hook call order
+       - Add proper cleanup in useEffect
 
-        - step: transform
-          source: ${file_content}
-          operation: apply_fixes
-          fixes: ${lint_results.fixes}
-          save_as: fixed_content
+    4. **Formatting:**
+       - Fix indentation
+       - Add/remove semicolons per config
+       - Fix quote style (single vs double)
+       - Remove trailing whitespace
 
-        - step: write_file
-          path: ${file.path}
-          content: ${fixed_content}
+    5. **Best practices:**
+       - Use === instead of ==
+       - Add key props to list items
+       - Fix console.log statements (remove or add eslint-disable)
+       - Prefer const over let when not reassigned
 
-  validation:
-    - check: valid_javascript
-      files: ${context.files}
+    Process:
+    - Read the file to understand context
+    - Identify each ESLint error
+    - Apply appropriate fix
+    - Ensure code still functions correctly
+    - Run eslint --fix mentally to verify
 
-    - check: no_syntax_errors
-      files: ${context.files}
+  examples: |
+    **Before:**
+    ```tsx
+    import React, { useState, useEffect } from 'react';
+    import { unused } from './utils';
 
-  success_message: "✓ Fixed ESLint errors in ${context.files.length} file(s)"
+    function Component() {
+      const [count, setCount] = useState(0);
+      let total = 100; // never reassigned
 
-  estimated_time: 5
+      useEffect(() => {
+        console.log(count);
+      }); // missing dependency
+
+      return (
+        <div>
+          {items.map(item => ( // missing key
+            <div>{item.name}</div>
+          ))}
+        </div>
+      );
+    }
+    ```
+
+    **After:**
+    ```tsx
+    import React, { useState, useEffect } from 'react';
+
+    function Component() {
+      const [count, setCount] = useState(0);
+      const total = 100; // const instead of let
+
+      useEffect(() => {
+        console.log(count);
+      }, [count]); // added dependency
+
+      return (
+        <div>
+          {items.map(item => (
+            <div key={item.id}>{item.name}</div> // added key
+          ))}
+        </div>
+      );
+    }
+    ```
