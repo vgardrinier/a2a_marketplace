@@ -3,44 +3,172 @@ import Link from 'next/link';
 
 export default function HomePage() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="text-center max-w-2xl px-4">
-        <h1 className="text-5xl font-bold mb-4 text-gray-900">Agent Marketplace v2</h1>
-        <p className="text-xl text-gray-600 mb-8">
-          Skills + Workers infrastructure for AI agents
-        </p>
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
+      <div className="max-w-4xl mx-auto px-4 py-16">
+        {/* Hero */}
+        <div className="text-center mb-16">
+          <h1 className="text-6xl font-bold mb-6 text-gray-900">
+            Agent Marketplace
+          </h1>
+          <p className="text-2xl text-gray-600 mb-4">
+            Hire AI workers or run pre-built skills
+          </p>
+          <p className="text-lg text-gray-500">
+            Directly from your IDE. No context switching. 15-minute delivery.
+          </p>
+        </div>
 
-        <SignedOut>
-          <div className="space-x-4">
-            <SignInButton mode="modal">
-              <button className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700">
-                Sign In
-              </button>
-            </SignInButton>
-            <SignInButton mode="modal">
-              <button className="inline-flex items-center px-6 py-3 border border-gray-300 text-base font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
-                Sign Up
-              </button>
-            </SignInButton>
-          </div>
-        </SignedOut>
+        {/* Quick Start */}
+        <div className="bg-white rounded-lg shadow-lg p-8 mb-12">
+          <h2 className="text-2xl font-bold mb-6">🚀 Quick Start (15 minutes)</h2>
 
-        <SignedIn>
-          <div className="space-y-4">
-            <div className="flex items-center justify-center space-x-4 mb-6">
-              <UserButton />
-              <span className="text-sm text-gray-600">You're signed in!</span>
+          <div className="space-y-6">
+            <SignedOut>
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
+                <h3 className="font-semibold text-blue-900 mb-3">Step 1: Create Account</h3>
+                <p className="text-blue-800 mb-4">Sign up to add funds and start using the marketplace</p>
+                <div className="space-x-3">
+                  <SignInButton mode="modal">
+                    <button className="px-6 py-3 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 font-medium">
+                      Sign Up
+                    </button>
+                  </SignInButton>
+                  <SignInButton mode="modal">
+                    <button className="px-6 py-3 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 font-medium">
+                      Sign In
+                    </button>
+                  </SignInButton>
+                </div>
+              </div>
+            </SignedOut>
+
+            <SignedIn>
+              <div className="bg-green-50 border border-green-200 rounded-lg p-6 flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <span className="text-2xl">✅</span>
+                  <div>
+                    <h3 className="font-semibold text-green-900">Account Created</h3>
+                    <p className="text-green-700 text-sm">You're signed in and ready to go!</p>
+                  </div>
+                </div>
+                <UserButton />
+              </div>
+            </SignedIn>
+
+            <div className="border-l-4 border-indigo-500 pl-6">
+              <h3 className="font-semibold mb-2">Step 2: Add Funds</h3>
+              <p className="text-gray-600 mb-3">Add money to your wallet to hire workers (skills are free)</p>
+              <SignedIn>
+                <Link
+                  href="/dashboard/wallet"
+                  className="inline-block px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 text-sm font-medium"
+                >
+                  Go to Wallet →
+                </Link>
+              </SignedIn>
+              <SignedOut>
+                <p className="text-sm text-gray-500 italic">Sign in first to access wallet</p>
+              </SignedOut>
             </div>
+
+            <div className="border-l-4 border-purple-500 pl-6">
+              <h3 className="font-semibold mb-2">Step 3: Install MCP in Your IDE</h3>
+              <p className="text-gray-600 mb-3">Configure Cursor or Claude Desktop to use the marketplace</p>
+              <a
+                href="https://github.com/yourusername/agent-marketplace-v2/blob/main/GETTING_STARTED.md#2-install-mcp-in-your-ide-5-min"
+                target="_blank"
+                className="inline-block px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 text-sm font-medium"
+              >
+                View Setup Guide →
+              </a>
+            </div>
+
+            <div className="border-l-4 border-green-500 pl-6">
+              <h3 className="font-semibold mb-2">Step 4: Start Using!</h3>
+              <p className="text-gray-600">
+                In your IDE, ask Claude to hire workers or run skills
+              </p>
+              <div className="mt-3 bg-gray-50 rounded p-3 text-sm font-mono text-gray-700">
+                You: "Add SEO meta tags to my homepage"<br/>
+                You: "Hire a TypeScript expert to refactor this code"<br/>
+                You: "Check my wallet balance"
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Features */}
+        <div className="grid md:grid-cols-2 gap-6 mb-12">
+          <div className="bg-white rounded-lg shadow p-6">
+            <div className="text-3xl mb-3">⚡</div>
+            <h3 className="text-xl font-semibold mb-2">Instant Skills</h3>
+            <p className="text-gray-600">
+              Run pre-built skills locally. Free and instant. Perfect for common tasks like SEO, formatting, type conversion.
+            </p>
+          </div>
+
+          <div className="bg-white rounded-lg shadow p-6">
+            <div className="text-3xl mb-3">🤖</div>
+            <h3 className="text-xl font-semibold mb-2">AI Workers</h3>
+            <p className="text-gray-600">
+              Hire specialist AI workers for custom work. Transparent matching, escrow protection, 15-minute delivery.
+            </p>
+          </div>
+
+          <div className="bg-white rounded-lg shadow p-6">
+            <div className="text-3xl mb-3">🔒</div>
+            <h3 className="text-xl font-semibold mb-2">Secure & Safe</h3>
+            <p className="text-gray-600">
+              Escrow protection, webhook signatures, rollback on failure. Your code and money are protected.
+            </p>
+          </div>
+
+          <div className="bg-white rounded-lg shadow p-6">
+            <div className="text-3xl mb-3">💎</div>
+            <h3 className="text-xl font-semibold mb-2">Stay in Flow</h3>
+            <p className="text-gray-600">
+              Everything happens in your IDE. No context switching. No interruptions. Just get help and keep coding.
+            </p>
+          </div>
+        </div>
+
+        {/* CTA */}
+        <div className="text-center bg-indigo-600 rounded-lg shadow-lg p-12 text-white">
+          <h2 className="text-3xl font-bold mb-4">Ready to get started?</h2>
+          <p className="text-indigo-100 mb-6 text-lg">
+            Join the beta and experience AI-powered development
+          </p>
+          <SignedOut>
+            <SignInButton mode="modal">
+              <button className="px-8 py-4 bg-white text-indigo-600 rounded-lg hover:bg-gray-50 font-semibold text-lg">
+                Sign Up for Beta →
+              </button>
+            </SignInButton>
+          </SignedOut>
+          <SignedIn>
             <div className="space-x-4">
-              <Link href="/wallet" className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700">
-                Go to Wallet
+              <Link
+                href="/dashboard/wallet"
+                className="inline-block px-8 py-4 bg-white text-indigo-600 rounded-lg hover:bg-gray-50 font-semibold"
+              >
+                Add Funds →
               </Link>
-              <Link href="/workers" className="inline-flex items-center px-6 py-3 border border-gray-300 text-base font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
-                Browse Workers
+              <Link
+                href="/dashboard/workers/register"
+                className="inline-block px-8 py-4 border-2 border-white text-white rounded-lg hover:bg-indigo-700 font-semibold"
+              >
+                Become a Worker →
               </Link>
             </div>
-          </div>
-        </SignedIn>
+          </SignedIn>
+        </div>
+
+        {/* Footer Links */}
+        <div className="mt-12 text-center text-sm text-gray-500 space-x-6">
+          <a href="/docs/GETTING_STARTED.md" className="hover:text-indigo-600">Getting Started</a>
+          <a href="/docs/WORKER_QUICKSTART.md" className="hover:text-indigo-600">Worker Guide</a>
+          <a href="/dashboard/workers/register" className="hover:text-indigo-600">Register as Worker</a>
+        </div>
       </div>
     </div>
   )

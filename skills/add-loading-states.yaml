@@ -1,71 +1,85 @@
 skill:
   id: add-loading-states
   name: Add Loading States
-  description: Add loading spinners and skeleton screens to components
-  category: ui-ux
+  description: Add proper loading states to async operations in React components
+  category: react
   pricing: free
-  author: marketplace
   version: 1.0.0
 
-  inputs:
-    loading_type:
-      type: select
-      required: true
-      default: spinner
-      description: Type of loading indicator
-      options:
-        - spinner
-        - skeleton
-        - progress-bar
+  context_patterns:
+    - "**/*.tsx"
+    - "**/*.jsx"
 
-    position:
-      type: select
-      required: false
-      default: center
-      description: Where to display loading indicator
-      options:
-        - center
-        - inline
-        - overlay
+  instructions: |
+    Add proper loading states to async operations in React components.
 
-  context_needed:
-    - description: Component file(s) to add loading states
-      pattern: "**/*.{tsx,jsx}"
-      max_files: 5
+    Steps:
+    1. Find async operations:
+       - API calls (fetch, axios)
+       - Data fetching hooks (useEffect with async)
+       - Form submissions
+       - File uploads
 
-  execution:
-    - step: for_each
-      items: ${context.files}
-      as: file
-      do:
-        - step: read_file
-          path: ${file.path}
-          save_as: component_content
+    2. Add loading state:
+       - const [isLoading, setIsLoading] = useState(false)
+       - Set to true before async operation
+       - Set to false in finally block
 
-        - step: analyze_code
-          content: ${component_content}
-          detect:
-            - async_operations
-            - data_fetching
-            - state_variables
-          save_as: analysis
+    3. Add UI feedback:
+       - Show spinner/skeleton during loading
+       - Disable buttons during submission
+       - Show "Loading..." text
+       - Use proper loading components (Spinner, Skeleton)
 
-        - step: generate
-          template: loading_component
-          inputs:
-            type: ${inputs.loading_type}
-            position: ${inputs.position}
-            existing_code: ${component_content}
-          save_as: updated_component
+    4. Handle errors:
+       - Add error state alongside loading
+       - Show error messages to user
+       - Add retry functionality if appropriate
 
-        - step: write_file
-          path: ${file.path}
-          content: ${updated_component}
+    5. Best practices:
+       - Never leave users without feedback
+       - Disable interactive elements while loading
+       - Show progress for long operations
+       - Use optimistic UI when appropriate
 
-  validation:
-    - check: valid_react_component
-      files: ${context.files}
+  examples: |
+    **Before:**
+    ```tsx
+    function UserProfile({ userId }: { userId: string }) {
+      const [user, setUser] = useState(null);
 
-  success_message: "✓ Added loading states to ${context.files.length} component(s)"
+      useEffect(() => {
+        fetch(`/api/users/${userId}`)
+          .then(res => res.json())
+          .then(setUser);
+      }, [userId]);
 
-  estimated_time: 3
+      return <div>{user?.name}</div>;
+    }
+    ```
+
+    **After:**
+    ```tsx
+    function UserProfile({ userId }: { userId: string }) {
+      const [user, setUser] = useState(null);
+      const [isLoading, setIsLoading] = useState(false);
+      const [error, setError] = useState<string | null>(null);
+
+      useEffect(() => {
+        setIsLoading(true);
+        setError(null);
+
+        fetch(`/api/users/${userId}`)
+          .then(res => res.json())
+          .then(setUser)
+          .catch(err => setError(err.message))
+          .finally(() => setIsLoading(false));
+      }, [userId]);
+
+      if (isLoading) return <Spinner />;
+      if (error) return <ErrorMessage message={error} />;
+      if (!user) return null;
+
+      return <div>{user.name}</div>;
+    }
+    ```

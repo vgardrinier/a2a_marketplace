@@ -1,5 +1,5 @@
 import { db } from '@/lib/db';
-import { users, transactions, escrow, jobs } from '@/lib/db/schema';
+import { users, transactions, escrow, jobs, workers } from '@/lib/db/schema';
 import { eq, sql } from 'drizzle-orm';
 import Stripe from 'stripe';
 
@@ -8,7 +8,7 @@ if (!process.env.STRIPE_RESTRICTED_KEY) {
 }
 
 const stripe = new Stripe(process.env.STRIPE_RESTRICTED_KEY, {
-  apiVersion: '2024-11-20.acacia',
+  apiVersion: '2023-10-16',
 });
 
 const PLATFORM_FEE_PERCENT = Number(process.env.PLATFORM_FEE_PERCENT) || 10;
@@ -175,7 +175,7 @@ export class WalletService {
 
         // Get worker details
         const worker = await tx.query.workers.findFirst({
-          where: eq(db.$with('workers').id, workerId),
+          where: eq(workers.id, workerId),
         });
 
         if (!worker || !worker.stripeAccountId) {

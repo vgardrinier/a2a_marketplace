@@ -9,16 +9,32 @@ export default function AdminPage() {
     totalJobs: 0,
     totalRevenue: 0,
   });
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Mock stats for now
-    setStats({
-      totalUsers: 12,
-      totalWorkers: 5,
-      totalJobs: 48,
-      totalRevenue: 245.50,
-    });
+    fetchStats();
   }, []);
+
+  const fetchStats = async () => {
+    try {
+      const response = await fetch('/api/admin/stats');
+      if (!response.ok) throw new Error('Failed to fetch stats');
+      const data = await response.json();
+      setStats(data);
+    } catch (error) {
+      console.error('Failed to fetch admin stats:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-gray-500">Loading stats...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

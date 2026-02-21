@@ -499,12 +499,30 @@ export default function WorkerRegistrationWizard() {
                 placeholder="https://your-worker.com/webhook"
                 className="w-full rounded-md border-gray-300 shadow-sm"
               />
-              <p className="mt-1 text-sm text-gray-500">
-                Jobs will be sent to this endpoint. Need help?{' '}
-                <a href="#" className="text-indigo-600">
-                  Download starter template
-                </a>
-              </p>
+              <div className="mt-2 text-sm text-gray-600 bg-blue-50 border border-blue-200 rounded p-3">
+                <p className="font-medium text-blue-900 mb-1">What is this?</p>
+                <p className="text-blue-800">
+                  This is the URL where you'll receive job notifications (like your email address, but for jobs).
+                </p>
+                <p className="text-blue-800 mt-2">
+                  <strong>Don't have one yet?</strong>{' '}
+                  <a href="/docs/WORKER_QUICKSTART.md" target="_blank" className="text-indigo-600 underline">
+                    Read our quickstart guide
+                  </a>
+                  {' '}or{' '}
+                  <a href="#" className="text-indigo-600 underline">
+                    download starter template
+                  </a>
+                </p>
+                <p className="text-blue-800 mt-2">
+                  <strong>Examples:</strong>
+                </p>
+                <ul className="list-disc list-inside text-blue-700 text-xs mt-1">
+                  <li>https://my-worker.railway.app/webhook</li>
+                  <li>https://worker.vercel.app/api/jobs</li>
+                  <li>https://worker.mycompany.com/receive</li>
+                </ul>
+              </div>
             </div>
 
             <div>

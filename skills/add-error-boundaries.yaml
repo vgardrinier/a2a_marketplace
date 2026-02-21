@@ -1,0 +1,151 @@
+skill:
+  id: add-error-boundaries
+  name: Add React Error Boundaries
+  description: Wrap components with error boundaries to catch runtime errors and prevent white screen crashes
+  category: react
+  pricing: free
+  version: 1.0.0
+
+  context_patterns:
+    - "**/*.tsx"
+    - "**/*.jsx"
+    - "**/app/**"
+    - "**/components/**"
+
+  instructions: |
+    Add error boundaries to catch and handle React component errors gracefully.
+
+    Steps:
+    1. Create ErrorBoundary component if it doesn't exist:
+       - Place in components/ErrorBoundary.tsx
+       - Use class component (hooks can't catch errors)
+       - Implement getDerivedStateFromError
+       - Add componentDidCatch for logging
+
+    2. Create error fallback UI:
+       - Show user-friendly error message
+       - Add "Try again" button
+       - Display error details in development
+       - Include way to report the error
+
+    3. Wrap strategic components:
+       - Route-level components (each page)
+       - Data-fetching components
+       - Third-party integrations
+       - Complex interactive widgets
+
+    4. Add error logging:
+       - Log to console in development
+       - Send to monitoring service in production (Sentry, LogRocket)
+       - Include error stack trace and component stack
+
+    5. Best practices:
+       - Don't wrap the entire app (one error shouldn't kill everything)
+       - Multiple boundaries at different levels
+       - Provide recovery mechanisms
+       - Test error scenarios
+
+  examples: |
+    **ErrorBoundary Component:**
+    ```tsx
+    // components/ErrorBoundary.tsx
+    import { Component, ReactNode } from 'react';
+
+    interface Props {
+      children: ReactNode;
+      fallback?: (error: Error, reset: () => void) => ReactNode;
+    }
+
+    interface State {
+      hasError: boolean;
+      error: Error | null;
+    }
+
+    export class ErrorBoundary extends Component<Props, State> {
+      state: State = {
+        hasError: false,
+        error: null,
+      };
+
+      static getDerivedStateFromError(error: Error): State {
+        return { hasError: true, error };
+      }
+
+      componentDidCatch(error: Error, errorInfo: { componentStack: string }) {
+        console.error('Error caught by boundary:', error, errorInfo);
+
+        // Send to monitoring service
+        if (process.env.NODE_ENV === 'production') {
+          // logErrorToService(error, errorInfo);
+        }
+      }
+
+      reset = () => {
+        this.setState({ hasError: false, error: null });
+      };
+
+      render() {
+        if (this.state.hasError) {
+          if (this.props.fallback) {
+            return this.props.fallback(this.state.error!, this.reset);
+          }
+
+          return (
+            <div className="error-boundary">
+              <h2>Something went wrong</h2>
+              <p>{this.state.error?.message}</p>
+              <button onClick={this.reset}>Try again</button>
+            </div>
+          );
+        }
+
+        return this.props.children;
+      }
+    }
+    ```
+
+    **Usage in Next.js App Router:**
+    ```tsx
+    // app/layout.tsx
+    import { ErrorBoundary } from '@/components/ErrorBoundary';
+
+    export default function RootLayout({ children }) {
+      return (
+        <html>
+          <body>
+            <ErrorBoundary>
+              {children}
+            </ErrorBoundary>
+          </body>
+        </html>
+      );
+    }
+    ```
+
+    **Page-level boundary:**
+    ```tsx
+    // app/dashboard/page.tsx
+    import { ErrorBoundary } from '@/components/ErrorBoundary';
+
+    export default function DashboardPage() {
+      return (
+        <ErrorBoundary fallback={(error, reset) => (
+          <div>
+            <h3>Dashboard failed to load</h3>
+            <p>{error.message}</p>
+            <button onClick={reset}>Retry</button>
+          </div>
+        )}>
+          <Dashboard />
+        </ErrorBoundary>
+      );
+    }
+    ```
+
+    **Component-level boundary:**
+    ```tsx
+    // components/UserProfile.tsx
+    <ErrorBoundary>
+      <AsyncUserData userId={userId} />
+    </ErrorBoundary>
+    ```
