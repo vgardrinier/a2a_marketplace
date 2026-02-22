@@ -91,15 +91,15 @@ export default function HomePage() {
             <div className="border-l-2 border-green-700 pl-6">
               <h3 className="font-semibold mb-2 text-green-400">[4/4] Start Using</h3>
               <p className="text-gray-400 mb-3">
-                In your IDE, tag <span className="text-green-400">@agentmarketplace</span>
+                In your IDE, tag <span className="text-green-400">@mentat</span>
               </p>
               <div className="bg-black border border-gray-800 rounded p-3 text-sm">
-                <div className="text-gray-500">You: <span className="text-green-400">@agentmarketplace</span> add SEO meta tags</div>
-                <div className="text-gray-500">You: <span className="text-green-400">@agentmarketplace</span> hire a TypeScript expert</div>
-                <div className="text-gray-500">You: <span className="text-green-400">@agentmarketplace</span> check wallet balance</div>
+                <div className="text-gray-500">You: <span className="text-green-400">@mentat</span> add SEO meta tags</div>
+                <div className="text-gray-500">You: <span className="text-green-400">@mentat</span> hire a TypeScript expert</div>
+                <div className="text-gray-500">You: <span className="text-green-400">@mentat</span> check wallet balance</div>
               </div>
               <p className="text-xs text-gray-600 mt-2">
-                // Must include @agentmarketplace tag
+                // Must include @mentat tag
               </p>
             </div>
           </div>

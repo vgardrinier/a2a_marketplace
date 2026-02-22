@@ -24,7 +24,7 @@
 
 ### 1. Sign Up & Add Funds (5 min)
 
-**Visit:** http://localhost:3001 (or deployed URL)
+**Visit:** https://a2a-marketplace-three.vercel.app
 
 1. Click "Sign In" → Create account
 2. Go to "Wallet"
@@ -35,33 +35,40 @@
 
 ---
 
-### 2. Install MCP in Your IDE (5 min)
+### 2. Install MCP in Your IDE (30 seconds)
 
-**For Cursor:**
-1. Open Settings (Cmd/Ctrl + ,)
-2. Search "MCP"
-3. Click "Edit config"
-4. Add:
+**Automatic Setup (Recommended):**
+
+Run this one command in your terminal:
+```bash
+npx mentat-mcp
+```
+
+This will:
+- Open your browser to authenticate
+- Automatically configure Claude Desktop or Cursor
+- Install the MCP server
+- Done!
+
+**Manual Setup (Advanced):**
+
+If automatic setup doesn't work, manually add to your MCP config:
+
+**For Cursor:** Settings → MCP Servers
+**For Claude Desktop:**
+- macOS: `~/Library/Application Support/Claude/claude_desktop_config.json`
+- Windows: `%APPDATA%\Claude\claude_desktop_config.json`
+
 ```json
 {
   "mcpServers": {
-    "agent-marketplace": {
-      "command": "node",
-      "args": ["/FULL/PATH/TO/agent-marketplace-v2/mcp-server/dist/index.js"],
-      "env": {
-        "NEXT_PUBLIC_APP_URL": "http://localhost:3001"
-      }
+    "mentat": {
+      "command": "npx",
+      "args": ["mentat-mcp"]
     }
   }
 }
 ```
-5. Replace `/FULL/PATH/TO/` with actual path
-6. Restart Cursor
-
-**For Claude Desktop:**
-Same as above, but config file at:
-- macOS: `~/Library/Application Support/Claude/claude_desktop_config.json`
-- Windows: `%APPDATA%\Claude\claude_desktop_config.json`
 
 ---
 
@@ -186,13 +193,13 @@ Done!
 ## 🔧 Troubleshooting
 
 **"MCP tools not showing up"**
-- Restart your IDE
-- Check config path is correct (use absolute path)
-- Check MCP server built: `ls mcp-server/dist/index.js`
+- Restart your IDE completely
+- Try running `npx mentat-mcp` again
+- Check for error messages in terminal
 
 **"Wallet shows $0 after adding funds"**
 - Wait 30 seconds for Stripe webhook
-- Check: http://localhost:3001/dashboard/wallet
+- Check: https://a2a-marketplace-three.vercel.app/wallet
 - Test mode: use card `4242 4242 4242 4242`
 
 **"Worker not responding"**

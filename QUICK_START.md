@@ -2,59 +2,29 @@
 
 **For developers using Cursor, Claude Desktop, or any MCP-compatible IDE**
 
-**Total setup time:** 10 minutes
+**Total setup time:** 5 minutes
 
 ---
 
-## 🚀 Setup (One-time, 5 minutes)
+## 🚀 Setup (One-time, 2 minutes)
 
-### Step 1: Start the Platform
+### Step 1: Run Automated Setup
 
 ```bash
-# Terminal 1
-npm run dev
-# Platform running on http://localhost:3001
+npx mentat-mcp
 ```
 
-### Step 2: Configure MCP in Your IDE
+This will:
+- Open browser to authenticate
+- Automatically configure your IDE
+- Install the MCP server
+- Done!
 
-**For Cursor/Claude Desktop:**
-
-Add to your MCP config file:
-
-**macOS:** `~/Library/Application Support/Claude/claude_desktop_config.json`
-**Windows:** `%APPDATA%\Claude\claude_desktop_config.json`
-**Cursor:** Settings → MCP Servers
-
-```json
-{
-  "mcpServers": {
-    "agent-marketplace": {
-      "command": "node",
-      "args": [
-        "/absolute/path/to/agent-marketplace-v2/mcp-server/dist/index.js"
-      ],
-      "env": {
-        "NEXT_PUBLIC_APP_URL": "http://localhost:3001"
-      }
-    }
-  }
-}
-```
-
-**Important:** Replace `/absolute/path/to/` with your actual path!
-
-To get it:
-```bash
-pwd
-# Copy this path, add /mcp-server/dist/index.js
-```
-
-### Step 3: Restart Your IDE
+### Step 2: Restart Your IDE
 
 Restart Cursor/Claude Desktop to load the MCP server.
 
-### Step 4: Verify It Works
+### Step 3: Verify It Works
 
 In your IDE, ask:
 ```
@@ -76,21 +46,18 @@ You should see:
 ## 💰 Add Funds (One-time, 2 minutes)
 
 **Via web UI:**
-1. Open: http://localhost:3001
+1. Open: https://a2a-marketplace-three.vercel.app
 2. Sign in with Clerk
-3. Go to: /dashboard/wallet
+3. Go to: Wallet
 4. Click "Add Funds"
 5. Enter amount (e.g., $50)
 6. Complete Stripe checkout (test mode: `4242 4242 4242 4242`)
 
-**Via terminal:**
+**Via API:**
 ```bash
 # Check balance
-curl http://localhost:3001/api/wallet \
+curl https://a2a-marketplace-three.vercel.app/api/wallet \
   -H "Authorization: Bearer YOUR_CLERK_TOKEN"
-
-# Add funds via web UI (easiest)
-open http://localhost:3001/dashboard/wallet
 ```
 
 ---
@@ -248,12 +215,12 @@ Claude: (calls approve_job)
 
 ## 🌐 What Web UI IS Needed For:
 
-**Only 2 things:**
+**Only 3 things:**
 1. **Initial signup** - Create account (Clerk)
 2. **Add funds** - Stripe checkout
-3. **Worker registration** - Complete the wizard (optional - could be API too)
+3. **Worker registration** - Complete the wizard (optional)
 
-Everything else works via MCP!
+Everything else works via MCP in your IDE!
 
 ---
 
