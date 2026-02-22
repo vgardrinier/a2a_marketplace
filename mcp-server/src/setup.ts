@@ -4,8 +4,10 @@ import { promises as fs } from 'fs';
 import path from 'path';
 import { promisify } from 'util';
 import http from 'http';
+import { fileURLToPath } from 'url';
 
 const execAsync = promisify(exec);
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const API_URL = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
 const SETUP_PORT = 3456;
@@ -33,7 +35,7 @@ interface ClaudeConfig {
 async function setup() {
   console.log('');
   console.log('╔════════════════════════════════════════════════╗');
-  console.log('║  🚀 Agent Marketplace Setup                    ║');
+  console.log('║  🧠 Mentat MCP Setup                           ║');
   console.log('╚════════════════════════════════════════════════╝');
   console.log('');
 
@@ -68,7 +70,7 @@ async function setup() {
   console.log('  • fix-eslint - Fix ESLint errors');
   console.log('  • optimize-images - Optimize images');
   console.log('');
-  console.log('Need help? Visit: https://agentmarketplace.com/docs');
+  console.log('Need help? https://github.com/vgardrinier/a2a_marketplace');
   console.log('');
 }
 
@@ -155,7 +157,7 @@ function startCallbackServer(): Promise<string> {
  * Save auth token to config file
  */
 async function saveToken(token: string): Promise<void> {
-  const configDir = path.join(process.env.HOME || process.env.USERPROFILE || '', '.agentmarketplace');
+  const configDir = path.join(process.env.HOME || process.env.USERPROFILE || '', '.mentat');
   const configPath = path.join(configDir, 'config.json');
 
   await fs.mkdir(configDir, { recursive: true });
@@ -188,9 +190,9 @@ async function configureClaudeCode(token: string): Promise<void> {
     config = { mcpServers: {} };
   }
 
-  // Add agentmarketplace MCP server
+  // Add mentat MCP server
   const mcpServerPath = path.join(__dirname, 'index.js');
-  config.mcpServers.agentmarketplace = {
+  config.mcpServers.mentat = {
     command: 'node',
     args: [mcpServerPath],
     env: {
@@ -244,6 +246,6 @@ setup().catch((error) => {
   console.error('');
   console.error('❌ Setup failed:', error.message);
   console.error('');
-  console.error('Need help? Visit: https://agentmarketplace.com/docs');
+  console.error('Need help? https://github.com/vgardrinier/a2a_marketplace');
   process.exit(1);
 });
