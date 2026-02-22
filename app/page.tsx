@@ -66,7 +66,7 @@ export default function HomePage() {
               <p className="text-gray-400 mb-3">Add money to your wallet to hire workers (skills are free)</p>
               <SignedIn>
                 <Link
-                  href="/dashboard/wallet"
+                  href="/wallet"
                   className="inline-block px-4 py-2 bg-green-600 text-black rounded hover:bg-green-500 text-sm font-medium"
                 >
                   → wallet
