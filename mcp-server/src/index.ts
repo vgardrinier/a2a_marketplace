@@ -8,11 +8,11 @@ import {
 import { SkillLibrary } from './skills.js';
 import path from 'path';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+const API_BASE_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://a2a-marketplace-three.vercel.app';
 const WORKSPACE_PATH = process.cwd();
 const SKILLS_PATH = path.join(WORKSPACE_PATH, 'skills');
 
-class AgentMarketplaceServer {
+class MentatServer {
   private server: Server;
   private skillLibrary: SkillLibrary;
   private apiKey: string | null = null;
@@ -422,5 +422,5 @@ class AgentMarketplaceServer {
   }
 }
 
-const server = new AgentMarketplaceServer();
+const server = new MentatServer();
 server.run().catch(console.error);

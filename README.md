@@ -135,7 +135,7 @@ Claude:
 ## 📁 Project Structure
 
 ```
-agent-marketplace-v2/
+mentat/
 ├── app/                    # Next.js App Router
 │   ├── api/               # API routes
 │   │   ├── workers/       # Worker endpoints

@@ -9,7 +9,7 @@ import { fileURLToPath } from 'url';
 const execAsync = promisify(exec);
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-const API_URL = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+const API_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://a2a-marketplace-three.vercel.app';
 const SETUP_PORT = 3456;
 
 interface ClaudeConfig {
@@ -23,7 +23,7 @@ interface ClaudeConfig {
 }
 
 /**
- * Terminal-first setup for Agent Marketplace MCP
+ * Terminal-first setup for Mentat MCP
  *
  * Flow:
  * 1. Start local server to receive auth token
@@ -282,7 +282,7 @@ setup().catch((error) => {
   console.error('Error:', error.message);
   console.error('');
   console.error('Common fixes:');
-  console.error('  • Make sure you\'re signed in at http://localhost:3000');
+  console.error('  • Make sure you\'re signed in at https://a2a-marketplace-three.vercel.app');
   console.error('  • Check that port 3456 is not in use');
   console.error('  • Try running the command again');
   console.error('');
