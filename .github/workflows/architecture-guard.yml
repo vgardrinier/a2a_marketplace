@@ -1,0 +1,140 @@
+name: Architecture Guard
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+  schedule:
+    # Weekly deep scan every Sunday at midnight
+    - cron: "0 0 * * 0"
+  workflow_dispatch: # Manual trigger
+
+jobs:
+  check-architecture:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+      issues: write
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get changed files (PR only)
+        id: changed-files
+        if: github.event_name == 'pull_request'
+        run: |
+          # Get files changed in this PR
+          FILES=$(git diff --name-only origin/${{ github.base_ref }}...HEAD | \
+            grep -E '\.(ts|tsx|js|jsx)$' | \
+            grep -v "node_modules" | \
+            tr '\n' ',' || echo "")
+
+          echo "files=$FILES" >> $GITHUB_OUTPUT
+          echo "Changed files: $FILES"
+
+      - name: Architecture Check
+        id: check
+        uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          prompt: |
+            # Architecture Enforcement Check
+
+            ## Mode
+            ${{ github.event_name == 'pull_request' && 'PR Review Mode' || 'Weekly Full Scan Mode' }}
+
+            ${{ github.event_name == 'pull_request' && format('Files changed in this PR: {0}', steps.changed-files.outputs.files) || 'Analyzing entire codebase' }}
+
+            ## Your Task
+
+            Review code against the architecture rules defined in `docs/ARCHITECTURE.md`.
+
+            ### Key Architecture Rules to Enforce:
+
+            **1. Feature Isolation**
+            - Features must be in `features/` folder
+            - Each feature should be self-contained
+            - Features can import from `lib/` but NOT from other `features/`
+
+            **2. API Routes Structure**
+            - API routes in `app/api/`
+            - Business logic should be in `features/`, not in route handlers
+            - Route handlers should be thin (< 50 lines)
+
+            **3. Shared Code**
+            - Shared utilities in `lib/`
+            - Database schema in `lib/db/schema.ts`
+            - `lib/` cannot import from `features/` or `app/`
+
+            **4. No Circular Dependencies**
+            - Detect any circular import chains
+            - Flag immediately if found
+
+            **5. Premature Abstraction**
+            - If new abstraction/utility created, check usage count
+            - Flag if used in < 2 places (possible premature DRY)
+
+            **6. Component Organization**
+            - UI components should be in feature folders, not scattered
+            - Truly shared components in `lib/components/`
+
+            ### What to Check
+
+            ${{ github.event_name == 'pull_request' && '
+            **PR Mode - Quick Check:**
+            - Only analyze changed files
+            - Check if changes violate architecture
+            - Look for new imports that break isolation
+            - Verify new files are in correct folders
+            ' || '
+            **Weekly Mode - Deep Analysis:**
+            - Scan entire codebase for drift
+            - Build dependency graph
+            - Find circular dependencies
+            - Identify code that should be refactored
+            - Check for growing complexity hotspots
+            '}}
+
+            ### Output Format
+
+            ${{ github.event_name == 'pull_request' && '
+            **If violations found:**
+            - Comment on PR with specific violations
+            - Include file paths and line numbers
+            - Explain why it violates architecture
+            - Suggest how to fix
+            - Mark check as FAILED
+
+            **If no violations:**
+            - Comment "✅ Architecture check passed"
+            - Mark check as PASSED
+            ' || '
+            **Weekly Scan:**
+            - Create GitHub issue titled "📐 Weekly Architecture Report - [DATE]"
+            - Include:
+              - Overall health score
+              - Violations found
+              - Complexity trends
+              - Suggested refactors
+              - Priority ranking (High/Med/Low)
+            - Add labels: "architecture", "technical-debt"
+            '}}
+
+            ### Important Notes
+            - Be strict but constructive
+            - Explain the "why" behind each rule
+            - Don't flag trivial issues
+            - Focus on structural problems, not style
+
+          claude_args: "--model sonnet"
+
+      - name: Set PR status
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            // This allows the workflow to block PR if violations found
+            // Claude's comment will indicate pass/fail
+            core.info('Architecture check completed - see Claude comment on PR');

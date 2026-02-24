@@ -1,0 +1,146 @@
+name: Nightly Code Audit
+
+on:
+  schedule:
+    # Runs at 2 AM UTC every day
+    - cron: "0 2 * * *"
+  workflow_dispatch: # Allows manual trigger for testing
+
+jobs:
+  check-activity:
+    runs-on: ubuntu-latest
+    outputs:
+      has_changes: ${{ steps.check.outputs.has_changes }}
+      changed_files: ${{ steps.check.outputs.changed_files }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Need full history to check last 24h
+
+      - name: Check for commits in last 24 hours
+        id: check
+        run: |
+          # Get commits from last 24 hours
+          COMMITS=$(git log --since="24 hours ago" --oneline)
+
+          if [ -z "$COMMITS" ]; then
+            echo "has_changes=false" >> $GITHUB_OUTPUT
+            echo "No commits in last 24 hours - skipping audit"
+          else
+            echo "has_changes=true" >> $GITHUB_OUTPUT
+
+            # Get the commit SHA from 24 hours ago
+            BASE_COMMIT=$(git log --until="24 hours ago" --format="%H" -n 1)
+
+            # If no commit from 24h ago, compare with first commit from today
+            if [ -z "$BASE_COMMIT" ]; then
+              BASE_COMMIT=$(git log --reverse --since="24 hours ago" --format="%H" -n 1)
+            fi
+
+            # Get list of changed files (excluding node_modules, lock files)
+            CHANGED_FILES=$(git diff --name-only $BASE_COMMIT HEAD | \
+              grep -v "node_modules" | \
+              grep -v "package-lock.json" | \
+              grep -v "yarn.lock" | \
+              grep -v ".next/" | \
+              tr '\n' ',' || echo "")
+
+            echo "changed_files=$CHANGED_FILES" >> $GITHUB_OUTPUT
+            echo "Found commits in last 24h"
+            echo "Changed files: $CHANGED_FILES"
+          fi
+
+  audit:
+    needs: check-activity
+    if: needs.check-activity.outputs.has_changes == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Run incremental code audit
+        uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          prompt: |
+            # Incremental Nightly Code Audit
+
+            ## CRITICAL: Incremental Analysis Only
+            You are analyzing ONLY the files changed in the last 24 hours, not the entire codebase.
+
+            Changed files: ${{ needs.check-activity.outputs.changed_files }}
+
+            ## Your Task
+
+            Analyze these changed files for technical debt and issues. Categorize findings into:
+
+            ### AUTO-FIXABLE (Create PR immediately)
+            Safe changes that can be automated:
+            - Unused imports or exports
+            - Dead code (unreferenced functions/variables)
+            - Console.log statements left in production code
+            - Missing/incorrect TypeScript types
+            - Outdated comments referencing deleted code
+            - Formatting inconsistencies
+
+            **If you find auto-fixable issues:**
+            1. Create branch: `cron/auto-fix-$(date +%Y-%m-%d)`
+            2. Make the fixes
+            3. Run `npm run lint` to verify
+            4. Commit with clear message
+            5. Push branch
+            6. Create PR with:
+               - Title: "🤖 Auto-fix: [brief description]"
+               - Body: Detailed list of changes made
+               - Label: "bot-created", "auto-fix"
+
+            **IMPORTANT LIMITS:**
+            - Max 20 files changed per PR
+            - If more issues found, create multiple PRs or combine into issue
+
+            ### NEEDS HUMAN REVIEW (Create GitHub Issue)
+            Complex issues requiring decisions:
+            - Architecture violations (check against docs/ARCHITECTURE.md)
+            - Circular dependencies
+            - Performance concerns
+            - Security vulnerabilities
+            - Code duplication that needs refactoring
+            - Missing error handling
+
+            **If you find complex issues:**
+            1. Create GitHub issue with:
+               - Title: "🔍 Code Review: [brief description]"
+               - Label: "technical-debt", "needs-review"
+               - Body:
+                 - Problem description
+                 - Affected files (with line numbers)
+                 - Suggested approach to fix
+                 - Estimated effort (S/M/L)
+
+            ## Rules
+            - ONLY analyze changed files, not entire codebase
+            - Don't create PR if no auto-fixable issues found
+            - Don't create issue if no complex problems found
+            - If nothing to report, just say "No issues found" and exit
+            - Branch prefix MUST be `cron/` not `bot/`
+
+          claude_args: "--model sonnet"
+
+      - name: Notify on failure
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: '🚨 Nightly Audit Failed',
+              body: `The nightly code audit workflow failed. Check the [workflow run](${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}) for details.`,
+              labels: ['automation', 'bug']
+            });
