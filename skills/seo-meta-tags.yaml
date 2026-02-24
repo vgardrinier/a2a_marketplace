@@ -3,7 +3,7 @@ skill:
   name: Add SEO Meta Tags
   description: Generate and add SEO meta tags to web pages
   category: seo
-  pricing: free
+  pricing: 0.25
   version: 1.0.0
 
   context_patterns:

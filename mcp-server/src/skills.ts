@@ -56,6 +56,7 @@ export class SkillLibrary {
 
   /**
    * Gather file context based on patterns or explicit files
+   * If explicit files are provided, patterns are ignored (respects user intent)
    */
   async gatherContext(
     patterns: string[] = [],
@@ -66,14 +67,17 @@ export class SkillLibrary {
     // Add explicit files
     explicitFiles.forEach((f) => filePaths.add(path.resolve(this.workspacePath, f)));
 
-    // Add files matching patterns
-    for (const pattern of patterns) {
-      const matches = await glob(pattern, {
-        cwd: this.workspacePath,
-        absolute: true,
-        ignore: ['**/node_modules/**', '**/.git/**', '**/dist/**', '**/build/**'],
-      });
-      matches.slice(0, LIMITS.maxFiles).forEach((f) => filePaths.add(f));
+    // Only use patterns if no explicit files were provided
+    // This prevents bloat when user specifies exact target files
+    if (filePaths.size === 0) {
+      for (const pattern of patterns) {
+        const matches = await glob(pattern, {
+          cwd: this.workspacePath,
+          absolute: true,
+          ignore: ['**/node_modules/**', '**/.git/**', '**/dist/**', '**/build/**'],
+        });
+        matches.slice(0, LIMITS.maxFiles).forEach((f) => filePaths.add(f));
+      }
     }
 
     // Rank and limit files
