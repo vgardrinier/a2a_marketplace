@@ -15,7 +15,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0 # Need full history to check last 24h
+          fetch-depth: 100 # Need recent history to check last 24h (reduced from full history)
 
       - name: Check for commits in last 24 hours
         id: check
@@ -25,10 +25,9 @@ jobs:
 
           if [ -z "$COMMITS" ]; then
             echo "has_changes=false" >> $GITHUB_OUTPUT
+            echo "changed_files=" >> $GITHUB_OUTPUT
             echo "No commits in last 24 hours - skipping audit"
           else
-            echo "has_changes=true" >> $GITHUB_OUTPUT
-
             # Get the commit SHA from 24 hours ago
             BASE_COMMIT=$(git log --until="24 hours ago" --format="%H" -n 1)
 
@@ -46,8 +45,16 @@ jobs:
               tr '\n' ',' || echo "")
 
             echo "changed_files=$CHANGED_FILES" >> $GITHUB_OUTPUT
-            echo "Found commits in last 24h"
-            echo "Changed files: $CHANGED_FILES"
+
+            # Early exit if no relevant files changed
+            if [ -z "$CHANGED_FILES" ]; then
+              echo "has_changes=false" >> $GITHUB_OUTPUT
+              echo "Commits found but no relevant files changed (only node_modules, lock files, etc.)"
+            else
+              echo "has_changes=true" >> $GITHUB_OUTPUT
+              echo "Found commits in last 24h"
+              echo "Changed files: $CHANGED_FILES"
+            fi
           fi
 
   audit:
@@ -63,9 +70,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          fetch-depth: 1 # Only need current state for analysis
 
       - name: Run incremental code audit
+        id: audit
         uses: anthropics/claude-code-action@v1
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
@@ -145,3 +153,78 @@ jobs:
               body: `The nightly code audit workflow failed. Check the [workflow run](${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}) for details.`,
               labels: ['automation', 'bug']
             });
+
+  report:
+    needs: [check-activity, audit]
+    if: always() # Always run to provide visibility
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    steps:
+      - name: Post audit summary
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const hasChanges = '${{ needs.check-activity.outputs.has_changes }}';
+            const auditStatus = '${{ needs.audit.result }}';
+            const changedFiles = '${{ needs.check-activity.outputs.changed_files }}';
+
+            let emoji, title, body;
+
+            if (hasChanges === 'false') {
+              emoji = '💤';
+              title = 'Nightly Audit: No Changes';
+              body = 'No relevant code changes detected in the last 24 hours. Audit skipped.';
+            } else if (auditStatus === 'success') {
+              emoji = '✅';
+              title = 'Nightly Audit: Clean';
+              body = `Analyzed changes from the last 24 hours. No issues found.\n\n**Files analyzed:** ${changedFiles.split(',').filter(f => f).length}`;
+            } else if (auditStatus === 'failure') {
+              emoji = '🚨';
+              title = 'Nightly Audit: Failed';
+              body = 'The audit encountered an error. Check the workflow run for details.';
+            } else {
+              emoji = '⏭️';
+              title = 'Nightly Audit: Skipped';
+              body = 'The audit was skipped.';
+            }
+
+            // Check if there's already an open audit summary issue from today
+            const today = new Date().toISOString().split('T')[0];
+            const issues = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              labels: 'audit-summary',
+              state: 'open'
+            });
+
+            const existingIssue = issues.data.find(issue =>
+              issue.title.includes(today) && issue.title.includes('Nightly Audit Summary')
+            );
+
+            if (existingIssue) {
+              // Close the existing issue and add final comment
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: existingIssue.number,
+                body: `${emoji} **${title}**\n\n${body}\n\n[View workflow run](${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId})`
+              });
+              await github.rest.issues.update({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: existingIssue.number,
+                state: 'closed'
+              });
+            } else {
+              // Only create issue if there was activity or an error
+              if (hasChanges === 'true' || auditStatus === 'failure') {
+                await github.rest.issues.create({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  title: `${emoji} Nightly Audit Summary - ${today}`,
+                  body: `${body}\n\n[View workflow run](${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId})`,
+                  labels: ['audit-summary', 'automation']
+                });
+              }
+            }
