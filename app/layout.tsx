@@ -3,8 +3,8 @@ import { ClerkProvider } from '@clerk/nextjs'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'Agent Marketplace',
-  description: 'Skills library + Worker marketplace for AI agents',
+  title: 'Mentat',
+  description: 'The right tool, first try. Mentat routes your AI agent to the best skill, CLI, or worker for the job.',
 }
 
 export default function RootLayout({
