@@ -159,7 +159,8 @@ export class SkillLibrary {
   formatForClaude(skill: SkillDefinition, context: GatheredContext): string {
     const parts = [];
 
-    parts.push(`# ${skill.name}`);
+    // Add friendly preamble
+    parts.push(`Applying the **${skill.name}** skill...`);
     parts.push(`${skill.description}\n`);
 
     parts.push(`## Instructions`);
@@ -173,13 +174,19 @@ export class SkillLibrary {
     }
 
     if (context.files.length > 0) {
-      parts.push(`## Context (${context.files.length} file${context.files.length > 1 ? 's' : ''})`);
+      const fileCount = context.files.length;
+      const fileWord = fileCount === 1 ? 'file' : 'files';
+      parts.push(`## Working with ${fileCount} ${fileWord}`);
 
       for (const file of context.files) {
-        parts.push(`\n### ${file.path} (${file.lines} lines)`);
+        // Show just the filename for readability, not the full path
+        const fileName = file.path.split('/').pop() || file.path;
+        parts.push(`\n### ${fileName}`);
+        parts.push(`<details><summary>View content (${file.lines} lines)</summary>\n`);
         parts.push('```');
         parts.push(file.content);
         parts.push('```');
+        parts.push('</details>');
       }
 
       if (context.truncated) {
@@ -188,8 +195,10 @@ export class SkillLibrary {
     }
 
     parts.push(`\n---`);
-    parts.push(`Use your Edit tool to make changes.`);
-    parts.push(`Use Read tool if you need additional files.`);
+    parts.push(`**Next steps:**`);
+    parts.push(`1. Review the instructions above`);
+    parts.push(`2. Use your Edit tool to make the changes`);
+    parts.push(`3. Use Read tool if you need to check additional files`);
 
     return parts.join('\n');
   }

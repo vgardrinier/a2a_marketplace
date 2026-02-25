@@ -40,22 +40,22 @@ class MentatServer {
       tools: [
         {
           name: 'execute_skill',
-          description: 'Execute a skill locally (instant, free)',
+          description: 'Apply instant code improvements using pre-built skills (free)',
           inputSchema: {
             type: 'object',
             properties: {
               skillId: {
                 type: 'string',
-                description: 'Skill ID to execute (e.g., seo-meta-tags)',
+                description: 'Which skill to apply (e.g., seo-meta-tags for adding SEO metadata)',
               },
               inputs: {
                 type: 'object',
-                description: 'Input parameters for the skill',
+                description: 'Customization options for the skill',
               },
               targetFiles: {
                 type: 'array',
                 items: { type: 'string' },
-                description: 'Files to operate on',
+                description: 'Which files to modify',
               },
             },
             required: ['skillId'],
@@ -63,25 +63,25 @@ class MentatServer {
         },
         {
           name: 'hire_worker',
-          description: 'Hire a specialist worker for custom work (paid)',
+          description: 'Get expert help with custom tasks (pay only for completed work)',
           inputSchema: {
             type: 'object',
             properties: {
               task: {
                 type: 'string',
-                description: 'Description of the task',
+                description: 'What needs to be done',
               },
               specialty: {
                 type: 'string',
-                description: 'Worker specialty (optional)',
+                description: 'Type of expert needed (e.g., "frontend", "API design")',
               },
               budget: {
                 type: 'number',
-                description: 'Maximum budget in USD',
+                description: 'Maximum you want to spend in USD',
               },
               context: {
                 type: 'object',
-                description: 'Context files and metadata',
+                description: 'Additional context to help match the right expert',
               },
             },
             required: ['task'],
@@ -89,13 +89,13 @@ class MentatServer {
         },
         {
           name: 'check_job',
-          description: 'Check status of a job',
+          description: 'See progress and status of work in progress',
           inputSchema: {
             type: 'object',
             properties: {
               jobId: {
                 type: 'string',
-                description: 'Job ID to check',
+                description: 'ID of the job to check on',
               },
             },
             required: ['jobId'],
@@ -103,23 +103,23 @@ class MentatServer {
         },
         {
           name: 'approve_job',
-          description: 'Approve job and release payment',
+          description: 'Accept completed work and release payment to the worker',
           inputSchema: {
             type: 'object',
             properties: {
               jobId: {
                 type: 'string',
-                description: 'Job ID to approve',
+                description: 'ID of the completed job',
               },
               rating: {
                 type: 'number',
-                description: 'Rating from 1-5',
+                description: 'Your rating of the work quality (1-5 stars)',
                 minimum: 1,
                 maximum: 5,
               },
               feedback: {
                 type: 'string',
-                description: 'Optional feedback',
+                description: 'Comments about the work (optional)',
               },
             },
             required: ['jobId', 'rating'],
@@ -127,17 +127,17 @@ class MentatServer {
         },
         {
           name: 'reject_job',
-          description: 'Reject job and request refund',
+          description: 'Request a refund for unsatisfactory work',
           inputSchema: {
             type: 'object',
             properties: {
               jobId: {
                 type: 'string',
-                description: 'Job ID to reject',
+                description: 'ID of the job you want to reject',
               },
               reason: {
                 type: 'string',
-                description: 'Reason for rejection',
+                description: 'Why the work was unsatisfactory',
               },
             },
             required: ['jobId', 'reason'],
@@ -145,7 +145,7 @@ class MentatServer {
         },
         {
           name: 'check_wallet',
-          description: 'Check wallet balance',
+          description: 'View your current wallet balance',
           inputSchema: {
             type: 'object',
             properties: {},
@@ -240,11 +240,20 @@ class MentatServer {
     const { match } = await response.json();
 
     if (match.type === 'skill') {
+      const skillInfo = [
+        `Great news! I found a pre-built skill that can handle this instantly (no cost):`,
+        ``,
+        `**${match.skill.name}**`,
+        match.skill.description || '',
+        ``,
+        `Ready to apply this skill?`,
+      ].join('\n');
+
       return {
         content: [
           {
             type: 'text',
-            text: `Found matching skill: ${match.skill.name}\n\nExecute with: execute_skill(skillId: "${match.skill.id}")`,
+            text: skillInfo,
           },
         ],
       };
@@ -254,35 +263,29 @@ class MentatServer {
       const { matches, recommendation } = match;
 
       // Build transparent worker list with reasoning
-      let text = '💡 Recommended: Hire a Worker\n\n';
-      text += `Why: ${recommendation}\n\n`;
-      text += '─────────────────────────────────────\n';
-      text += `Top ${Math.min(matches.length, 5)} Matching Workers:\n\n`;
+      let text = '💡 **Expert Help Available**\n\n';
+      text += `${recommendation}\n\n`;
+      text += `**Top ${Math.min(matches.length, 5)} Matching Experts:**\n\n`;
 
       matches.slice(0, 5).forEach((m: any, index: number) => {
         const confidenceIcon =
           m.confidence === 'high' ? '🟢' : m.confidence === 'medium' ? '🟡' : '🔴';
 
-        text += `${index + 1}. ${m.worker.name} ${confidenceIcon}\n`;
-        text += `   Specialty: ${m.worker.specialty}\n`;
-        text += `   Rating: ${m.worker.reputationScore}/5 (${m.worker.completionCount} jobs)\n`;
-        text += `   Avg Time: ~${m.worker.avgCompletionTime} min\n`;
-        text += `   Est Cost: $${m.worker.pricing}\n`;
-        text += `   Match: ${Math.round(m.score)}% - ${m.reasons.join(', ')}\n`;
-        text += `   Confidence: ${m.confidence.toUpperCase()}\n`;
+        text += `**${index + 1}. ${m.worker.name}** ${confidenceIcon}\n`;
+        text += `   → ${m.worker.specialty}\n`;
+        text += `   → ${m.worker.reputationScore}/5 stars • ${m.worker.completionCount} completed jobs\n`;
+        text += `   → Typically completes in ~${m.worker.avgCompletionTime} min\n`;
+        text += `   → Estimated cost: **$${m.worker.pricing}**\n`;
+        text += `   → ${Math.round(m.score)}% match: ${m.reasons.join(', ')}\n`;
         text += '\n';
       });
 
-      text += '─────────────────────────────────────\n\n';
-      text += '📌 To hire a worker, note their number and:\n';
-      text += '   1. Check your wallet: check_wallet()\n';
-      text += '   2. Create job with preferred worker\n\n';
-
       if (matches.length > 5) {
-        text += `💡 Showing top 5 of ${matches.length} matching workers\n\n`;
+        text += `_Showing top 5 of ${matches.length} matching workers_\n\n`;
       }
 
-      text += 'Or type: execute_skill(...) to try a pre-built skill instead';
+      text += '**Ready to proceed?**\n';
+      text += "I can hire one of these experts for you. They'll complete the work and you only pay when satisfied.\n";
 
       return {
         content: [{ type: 'text', text }],
