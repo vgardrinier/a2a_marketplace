@@ -1,0 +1,12 @@
+entry:
+  id: sentry-pr-code-review
+  type: skill
+  name: Sentry Pr Code Review
+  description: Review a project's PRs to check for issues detected in code review
+    by Seer Bug Prediction. Use when asked to review or fix issues identified by
+    Sentry in PR comments, or to find recent PRs with Sentry feedback.
+  source: github:getsentry/sentry-agent-skills/skills/sentry-pr-code-review
+  stars: 16
+  detect:
+    dependencies:
+      - "@sentry/nextjs"

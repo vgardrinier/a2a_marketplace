@@ -1,0 +1,10 @@
+entry:
+  id: stripe-best-practices
+  type: skill
+  name: Stripe Best Practices
+  description: Best practices for building Stripe integrations
+  source: github:stripe/agent-toolkit/skills/stripe-best-practices
+  stars: 1314
+  detect:
+    dependencies:
+      - stripe

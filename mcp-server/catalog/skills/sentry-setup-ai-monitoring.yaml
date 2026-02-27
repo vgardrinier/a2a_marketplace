@@ -1,0 +1,23 @@
+entry:
+  id: sentry-setup-ai-monitoring
+  type: skill
+  name: Sentry Setup AI Monitoring
+  description: Setup Sentry AI Agent Monitoring in any project. Use when asked to
+    monitor LLM calls, track AI agents, or instrument OpenAI/Anthropic/Vercel
+    AI/LangChain/Google GenAI/Pydantic AI. Detects installed AI SDKs and
+    configures appropriate integrations.
+  source: github:getsentry/sentry-agent-skills/skills/sentry-setup-ai-monitoring
+  stars: 16
+  detect:
+    dependencies:
+      - next
+      - "@modelcontextprotocol/sdk"
+      - "@sentry/nextjs"
+    files:
+      - pom.xml
+      - pyproject.toml
+  context_patterns:
+    - "**/*.tsx"
+    - "**/*.jsx"
+    - "**/*.ts"
+    - "**/*.py"

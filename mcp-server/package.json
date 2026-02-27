@@ -11,7 +11,8 @@
     "build": "tsc",
     "dev": "tsc --watch",
     "start": "node dist/index.js",
-    "setup": "node dist/setup.js"
+    "setup": "node dist/setup.js",
+    "ingest": "npx tsx scripts/ingest-skills.ts"
   },
   "keywords": [
     "mcp",
@@ -26,6 +27,10 @@
   ],
   "author": "Victor Gardrinier",
   "license": "MIT",
+  "files": [
+    "dist",
+    "catalog"
+  ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/vgardrinier/mentat.git",

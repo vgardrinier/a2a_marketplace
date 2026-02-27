@@ -1,0 +1,19 @@
+entry:
+  id: algorithmic-art
+  type: skill
+  name: Algorithmic Art
+  description: Creating algorithmic art using p5.js with seeded randomness and
+    interactive parameter exploration. Use this when users request creating art
+    using code, generative art, algorithmic art, flow fields, or particle
+    systems.
+  source: github:anthropics/skills/skills/algorithmic-art
+  stars: 78165
+  detect:
+    dependencies:
+      - next
+      - rails
+    files:
+      - go.mod
+      - pom.xml
+      - Cargo.toml
+      - Gemfile

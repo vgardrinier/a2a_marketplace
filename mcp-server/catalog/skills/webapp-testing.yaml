@@ -1,0 +1,16 @@
+entry:
+  id: webapp-testing
+  type: skill
+  name: Webapp Testing
+  description: Toolkit for interacting with and testing local web applications
+    using Playwright. Supports verifying frontend functionality, debugging UI
+    behavior, capturing browser screenshots, and viewing browser logs.
+  source: github:anthropics/skills/skills/webapp-testing
+  stars: 78165
+  detect:
+    dependencies:
+      - playwright
+    files:
+      - pyproject.toml
+  context_patterns:
+    - "**/*.py"
