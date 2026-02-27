@@ -103,8 +103,9 @@ export class WalletService {
 
         const currentBalance = parseFloat(user.walletBalance);
         if (currentBalance < amount) {
+          const shortfall = amount - currentBalance;
           throw new Error(
-            `Insufficient funds. Balance: $${currentBalance.toFixed(2)}, Required: $${amount.toFixed(2)}`
+            `Insufficient funds. Balance: $${currentBalance.toFixed(2)}, Required: $${amount.toFixed(2)} (short $${shortfall.toFixed(2)}). Add funds at ${process.env.NEXT_PUBLIC_APP_URL}/wallet`
           );
         }
 

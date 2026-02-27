@@ -104,19 +104,14 @@ export default function HomePage() {
                 <span className="text-green-400">✓</span>
                 <div>
                   <p className="font-semibold text-green-400">Signed in</p>
-                  <p className="text-gray-400 text-sm">Skills + paid agents unlocked</p>
+                  <p className="text-gray-400 text-sm">You're all set — run skills from your terminal.</p>
                 </div>
               </div>
               <UserButton />
             </div>
-            <div className="mt-4 flex space-x-3">
-              <Link
-                href="/wallet"
-                className="inline-block px-4 py-2 border border-green-700 text-green-400 rounded hover:bg-gray-800 text-sm font-medium"
-              >
-                → wallet
-              </Link>
-            </div>
+            <p className="mt-3 text-xs text-gray-600">
+              <Link href="/wallet" className="hover:text-gray-400">manage wallet →</Link>
+            </p>
           </SignedIn>
         </div>
       </div>

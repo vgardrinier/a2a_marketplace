@@ -17,21 +17,17 @@ export default async function DashboardLayout({
       <nav className="bg-gray-950 border-b border-green-900">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16">
-            <div className="flex items-center space-x-8 font-mono">
+            <div className="flex items-center font-mono">
               <a href="/" className="text-green-400 font-bold">
                 $ agentmarketplace
               </a>
+            </div>
+            <div className="flex items-center font-mono">
               <a
                 href="/wallet"
-                className="text-gray-400 hover:text-green-400 text-sm"
+                className="text-gray-600 hover:text-gray-400 text-xs"
               >
                 wallet
-              </a>
-              <a
-                href="/workers"
-                className="text-gray-400 hover:text-green-400 text-sm"
-              >
-                workers
               </a>
             </div>
           </div>

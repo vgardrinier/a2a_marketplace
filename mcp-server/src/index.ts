@@ -399,6 +399,24 @@ class MentatServer {
 
     const { balance, needsTopUp } = await response.json();
 
+    if (balance === 0) {
+      return {
+        content: [
+          {
+            type: 'text',
+            text: [
+              `Wallet Balance: $0.00`,
+              ``,
+              `All skills are free — no wallet funding needed.`,
+              `You'll only need to add funds when paid workers become available.`,
+              ``,
+              `Top up anytime at: ${API_BASE_URL}/wallet`,
+            ].join('\n'),
+          },
+        ],
+      };
+    }
+
     return {
       content: [
         {
