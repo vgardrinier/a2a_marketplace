@@ -5,6 +5,11 @@ import type { ProjectProfile } from './types.js';
 let cachedProfile: { profile: ProjectProfile; timestamp: number } | null = null;
 const CACHE_TTL = 60_000; // 60 seconds
 
+/** Reset detection cache — used in tests to isolate fixtures. */
+export function clearDetectCache(): void {
+  cachedProfile = null;
+}
+
 /**
  * Detect project context by reading common config files.
  * Results cached for 60s to avoid repeated disk reads.

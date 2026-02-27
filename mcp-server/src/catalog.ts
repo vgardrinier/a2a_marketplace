@@ -16,7 +16,11 @@ const CACHE_DIR = path.join(os.homedir(), '.mentat', 'skills');
 const CACHE_TTL = 24 * 60 * 60 * 1000; // 24 hours
 
 export class CatalogLibrary {
-  constructor(private workspacePath: string) {}
+  private bundledCatalogDir: string;
+
+  constructor(private workspacePath: string, bundledCatalogDir?: string) {
+    this.bundledCatalogDir = bundledCatalogDir ?? BUNDLED_CATALOG_DIR;
+  }
 
   /**
    * Load all catalog entries from bundled + project sources,
@@ -49,7 +53,7 @@ export class CatalogLibrary {
     if (entry) return this.resolveSource(entry);
 
     // Then bundled catalog
-    const bundledFiles = await glob('**/*.yaml', { cwd: BUNDLED_CATALOG_DIR, absolute: true });
+    const bundledFiles = await glob('**/*.yaml', { cwd: this.bundledCatalogDir, absolute: true });
     for (const file of bundledFiles) {
       const e = await this.loadYamlEntry(file);
       if (e && e.id === id) return this.resolveSource(e);
@@ -157,7 +161,7 @@ export class CatalogLibrary {
   }
 
   private async loadBundledCatalog(): Promise<CatalogEntry[]> {
-    return this.loadYamlDir(BUNDLED_CATALOG_DIR);
+    return this.loadYamlDir(this.bundledCatalogDir);
   }
 
   private async loadProjectCatalog(): Promise<CatalogEntry[]> {
