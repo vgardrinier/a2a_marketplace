@@ -13,12 +13,16 @@ const API_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://a2a-marketplace-thre
 const SETUP_PORT = 3456;
 
 interface ClaudeConfig {
-  mcpServers: {
+  mcpServers?: {
     [key: string]: {
       command: string;
       args: string[];
       env?: Record<string, string>;
     };
+  };
+  permissions?: {
+    allow?: string[];
+    deny?: string[];
   };
 }
 
@@ -60,15 +64,9 @@ async function setup() {
   console.log('Next steps:');
   console.log('1. Restart Claude Code');
   console.log('2. Open any project');
-  console.log('3. Try: @mentat execute_skill --skillId seo-meta-tags');
+  console.log('3. Try: @mentat deploy this');
   console.log('');
-  console.log('Available skills:');
-  console.log('  • seo-meta-tags - Add SEO meta tags');
-  console.log('  • typescript-convert - Convert JS to TypeScript');
-  console.log('  • add-loading-states - Add loading states');
-  console.log('  • add-error-boundaries - Add error boundaries');
-  console.log('  • fix-eslint - Fix ESLint errors');
-  console.log('  • optimize-images - Optimize images');
+  console.log('Mentat auto-detects your project stack and routes to the right tool.');
   console.log('');
   console.log('Need help? https://github.com/vgardrinier/mentat');
   console.log('');
@@ -207,7 +205,7 @@ async function saveToken(token: string): Promise<void> {
  * Configure Claude Code MCP settings
  */
 async function configureClaudeCode(token: string): Promise<void> {
-  const configPath = getClaudeConfigPath();
+  const configPath = await getClaudeConfigPath();
 
   if (!configPath) {
     console.log('⚠️  Could not find Claude Code config');
@@ -225,6 +223,7 @@ async function configureClaudeCode(token: string): Promise<void> {
   }
 
   // Add mentat MCP server
+  if (!config.mcpServers) config.mcpServers = {};
   const mcpServerPath = path.join(__dirname, 'index.js');
   config.mcpServers.mentat = {
     command: 'node',
@@ -235,6 +234,14 @@ async function configureClaudeCode(token: string): Promise<void> {
     },
   };
 
+  // Auto-approve the solve tool so users don't get prompted every time
+  if (!config.permissions) config.permissions = {};
+  if (!config.permissions.allow) config.permissions.allow = [];
+  const solvePermission = 'mcp__mentat__solve';
+  if (!config.permissions.allow.includes(solvePermission)) {
+    config.permissions.allow.push(solvePermission);
+  }
+
   // Write config
   await fs.mkdir(path.dirname(configPath), { recursive: true });
   await fs.writeFile(configPath, JSON.stringify(config, null, 2));
@@ -243,13 +250,20 @@ async function configureClaudeCode(token: string): Promise<void> {
 }
 
 /**
- * Get Claude Code config path based on OS
- * Claude Code CLI uses ~/.claude.json
+ * Get Claude Code config path.
+ * Checks newer ~/.claude/settings.json first, falls back to ~/.claude.json
  */
-function getClaudeConfigPath(): string | null {
+async function getClaudeConfigPath(): Promise<string | null> {
   const home = process.env.HOME || process.env.USERPROFILE || '';
 
-  // Claude Code CLI config (not Claude Desktop!)
+  // Newer path (Claude Code CLI)
+  const newPath = path.join(home, '.claude', 'settings.json');
+  try {
+    await fs.access(newPath);
+    return newPath;
+  } catch { /* not found */ }
+
+  // Legacy path
   return path.join(home, '.claude.json');
 }
 
