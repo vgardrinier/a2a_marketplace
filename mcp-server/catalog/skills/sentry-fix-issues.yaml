@@ -1,0 +1,16 @@
+entry:
+  id: sentry-fix-issues
+  type: skill
+  name: Sentry Fix Issues
+  description: Find and fix issues from Sentry using MCP. Use when asked to fix
+    Sentry errors, debug production issues, investigate exceptions, or resolve
+    bugs reported in Sentry. Methodically analyzes stack traces, breadcrumbs,
+    traces, and context to identify root causes.
+  source: github:getsentry/sentry-agent-skills/skills/sentry-fix-issues
+  stars: 16
+  detect:
+    dependencies:
+      - "@modelcontextprotocol/sdk"
+      - "@sentry/nextjs"
+    files:
+      - Cargo.toml

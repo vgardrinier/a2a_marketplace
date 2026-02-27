@@ -1,0 +1,27 @@
+entry:
+  id: sentry-python-sdk
+  type: skill
+  name: Sentry Python Sdk
+  description: Full Sentry SDK setup for Python. Use when asked to "add Sentry to
+    Python", "install sentry-sdk", "setup Sentry in Python", or configure error
+    monitoring, tracing, profiling, logging, metrics, crons, or AI monitoring
+    for Python applications.
+  source: github:getsentry/sentry-agent-skills/skills/sentry-python-sdk
+  stars: 16
+  detect:
+    dependencies:
+      - next
+      - vue
+      - svelte
+      - "@sentry/nextjs"
+      - django
+      - flask
+    files:
+      - pom.xml
+      - pyproject.toml
+  context_patterns:
+    - "**/*.tsx"
+    - "**/*.jsx"
+    - "**/*.py"
+    - "**/*.vue"
+    - "**/*.svelte"

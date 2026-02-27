@@ -1,0 +1,13 @@
+entry:
+  id: resend-skills
+  type: skill
+  name: Resend
+  description: Use when working with Resend email platform - routes to specific
+    sub-skills for sending, receiving, audiences, or broadcasts.
+  source: github:resend/resend-skills/.
+  stars: 63
+  detect:
+    dependencies:
+      - resend
+    files:
+      - Cargo.toml

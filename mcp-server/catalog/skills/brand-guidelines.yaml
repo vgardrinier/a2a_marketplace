@@ -1,0 +1,15 @@
+entry:
+  id: brand-guidelines
+  type: skill
+  name: Brand Guidelines
+  description: Applies Anthropic's official brand colors and typography to any
+    sort of artifact that may benefit from having Anthropic's look-and-feel. Use
+    it when brand colors or style guidelines, visual formatting, or company
+    design standards apply.
+  source: github:anthropics/skills/skills/brand-guidelines
+  stars: 78165
+  detect:
+    files:
+      - pyproject.toml
+  context_patterns:
+    - "**/*.py"

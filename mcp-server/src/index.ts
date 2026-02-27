@@ -6,15 +6,73 @@ import {
   ListToolsRequestSchema,
 } from '@modelcontextprotocol/sdk/types.js';
 import { SkillLibrary } from './skills.js';
+import { CatalogLibrary } from './catalog.js';
+import { detectProjectContext } from './detect.js';
+import type { ProjectProfile } from './types.js';
 import path from 'path';
+
+import type { CatalogEntry } from './types.js';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://a2a-marketplace-three.vercel.app';
 const WORKSPACE_PATH = process.cwd();
 const SKILLS_PATH = path.join(WORKSPACE_PATH, 'skills');
 
+/**
+ * Format the solve response from a profile + filtered catalog entries.
+ * Exported for testing.
+ */
+export function formatSolveResponse(
+  profile: ProjectProfile,
+  entries: CatalogEntry[],
+  task: string,
+  targetFiles?: string[],
+): string {
+  const parts: string[] = [];
+
+  parts.push('## Your Project');
+  parts.push(`- Language: ${profile.language.join(', ')}`);
+  if (profile.framework) parts.push(`- Framework: ${profile.framework}`);
+  if (profile.configs.length > 0) parts.push(`- Detected: ${profile.configs.join(', ')}`);
+  if (profile.dependencies.length > 0) {
+    const topDeps = profile.dependencies.slice(0, 15);
+    parts.push(`- Deps: ${topDeps.join(', ')}${profile.dependencies.length > 15 ? ` (+${profile.dependencies.length - 15} more)` : ''}`);
+  }
+  if (profile.packageManager) parts.push(`- Package manager: ${profile.packageManager}`);
+  parts.push('');
+
+  if (entries.length > 0) {
+    parts.push('## Available Solutions');
+    parts.push('');
+    for (const entry of entries) {
+      parts.push(`### ${entry.id} (${entry.type})`);
+      parts.push(entry.description);
+      if (entry.instructions && entry.instructions !== entry.description) {
+        parts.push('');
+        parts.push(entry.instructions.trim());
+      }
+      parts.push('');
+    }
+  } else {
+    parts.push('## No catalog solutions matched this project.');
+    parts.push('Proceed with your own judgment.');
+    parts.push('');
+  }
+
+  parts.push(`## User's Task`);
+  parts.push(`"${task}"`);
+  if (targetFiles?.length) {
+    parts.push(`Target files: ${targetFiles.join(', ')}`);
+  }
+  parts.push('');
+  parts.push('Pick the best solution and execute it. If none fit, use your own judgment.');
+
+  return parts.join('\n');
+}
+
 class MentatServer {
   private server: Server;
   private skillLibrary: SkillLibrary;
+  private catalogLibrary: CatalogLibrary;
   private apiKey: string | null = null;
 
   constructor() {
@@ -31,6 +89,7 @@ class MentatServer {
     );
 
     this.skillLibrary = new SkillLibrary(SKILLS_PATH, WORKSPACE_PATH, API_BASE_URL);
+    this.catalogLibrary = new CatalogLibrary(WORKSPACE_PATH);
 
     this.setupHandlers();
   }
@@ -38,6 +97,28 @@ class MentatServer {
   private setupHandlers() {
     this.server.setRequestHandler(ListToolsRequestSchema, async () => ({
       tools: [
+        {
+          name: 'solve',
+          description:
+            'Only use when the user explicitly mentions Mentat or asks for Mentat\'s help. ' +
+            'Routes to the best skill, CLI, or agent for the task. ' +
+            'Mentat detects the project stack automatically.',
+          inputSchema: {
+            type: 'object',
+            properties: {
+              task: {
+                type: 'string',
+                description: 'What the user wants to do, in plain english',
+              },
+              targetFiles: {
+                type: 'array',
+                items: { type: 'string' },
+                description: 'Specific files to focus on (optional)',
+              },
+            },
+            required: ['task'],
+          },
+        },
         {
           name: 'execute_skill',
           description: 'Apply instant code improvements using pre-built skills (free)',
@@ -63,25 +144,13 @@ class MentatServer {
         },
         {
           name: 'hire_worker',
-          description: 'Get expert help with custom tasks (pay only for completed work)',
+          description: 'Get expert help with custom tasks (coming soon)',
           inputSchema: {
             type: 'object',
             properties: {
               task: {
                 type: 'string',
                 description: 'What needs to be done',
-              },
-              specialty: {
-                type: 'string',
-                description: 'Type of expert needed (e.g., "frontend", "API design")',
-              },
-              budget: {
-                type: 'number',
-                description: 'Maximum you want to spend in USD',
-              },
-              context: {
-                type: 'object',
-                description: 'Additional context to help match the right expert',
               },
             },
             required: ['task'],
@@ -159,6 +228,8 @@ class MentatServer {
 
       try {
         switch (name) {
+          case 'solve':
+            return await this.solve(args as any);
           case 'execute_skill':
             return await this.executeSkill(args as any);
           case 'hire_worker':
@@ -188,115 +259,72 @@ class MentatServer {
     });
   }
 
+  private async solve(args: { task: string; targetFiles?: string[] }) {
+    const profile = await detectProjectContext(WORKSPACE_PATH);
+    const entries = await this.catalogLibrary.getRelevantEntries(profile);
+    const text = formatSolveResponse(profile, entries, args.task, args.targetFiles);
+
+    return {
+      content: [{ type: 'text', text }],
+    };
+  }
+
   private async executeSkill(args: {
     skillId: string;
     inputs?: Record<string, any>;
     targetFiles?: string[];
   }) {
-    // Load skill definition
-    const skill = await this.skillLibrary.loadSkill(args.skillId);
+    // Try catalog first, fall back to legacy SkillLibrary
+    const catalogEntry = await this.catalogLibrary.getEntryById(args.skillId);
 
-    // Gather context from files
-    const context = await this.skillLibrary.gatherContext(
-      skill.context_patterns || [],
-      args.targetFiles || []
-    );
-
-    // Format for Claude to read
-    const formattedPrompt = this.skillLibrary.formatForClaude(skill, context);
-
-    return {
-      content: [
-        {
-          type: 'text',
-          text: formattedPrompt,
-        },
-      ],
-    };
-  }
-
-  private async hireWorker(args: {
-    task: string;
-    specialty?: string;
-    budget?: number;
-    context?: Record<string, any>;
-  }) {
-    const response = await fetch(`${API_BASE_URL}/api/match`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        task: args.task,
-        specialty: args.specialty,
-        budget: args.budget,
-      }),
-    });
-
-    if (!response.ok) {
-      throw new Error(`Match API failed: ${response.statusText}`);
-    }
-
-    const { match } = await response.json();
-
-    if (match.type === 'skill') {
-      const skillInfo = [
-        `Great news! I found a pre-built skill that can handle this instantly (no cost):`,
-        ``,
-        `**${match.skill.name}**`,
-        match.skill.description || '',
-        ``,
-        `Ready to apply this skill?`,
-      ].join('\n');
-
+    if (catalogEntry) {
+      const context = await this.skillLibrary.gatherContext(
+        catalogEntry.context_patterns || [],
+        args.targetFiles || []
+      );
       return {
         content: [
           {
             type: 'text',
-            text: skillInfo,
+            text: this.skillLibrary.formatForClaude(
+              {
+                id: catalogEntry.id,
+                name: catalogEntry.name,
+                description: catalogEntry.description,
+                instructions: catalogEntry.instructions,
+                context_patterns: catalogEntry.context_patterns,
+                examples: catalogEntry.examples,
+              },
+              context
+            ),
           },
         ],
       };
     }
 
-    if (match.type === 'worker') {
-      const { matches, recommendation } = match;
+    // Legacy path
+    const skill = await this.skillLibrary.loadSkill(args.skillId);
+    const context = await this.skillLibrary.gatherContext(
+      skill.context_patterns || [],
+      args.targetFiles || []
+    );
+    const formattedPrompt = this.skillLibrary.formatForClaude(skill, context);
 
-      // Build transparent worker list with reasoning
-      let text = '💡 **Expert Help Available**\n\n';
-      text += `${recommendation}\n\n`;
-      text += `**Top ${Math.min(matches.length, 5)} Matching Experts:**\n\n`;
+    return {
+      content: [{ type: 'text', text: formattedPrompt }],
+    };
+  }
 
-      matches.slice(0, 5).forEach((m: any, index: number) => {
-        const confidenceIcon =
-          m.confidence === 'high' ? '🟢' : m.confidence === 'medium' ? '🟡' : '🔴';
-
-        text += `**${index + 1}. ${m.worker.name}** ${confidenceIcon}\n`;
-        text += `   → ${m.worker.specialty}\n`;
-        text += `   → ${m.worker.reputationScore}/5 stars • ${m.worker.completionCount} completed jobs\n`;
-        text += `   → Typically completes in ~${m.worker.avgCompletionTime} min\n`;
-        text += `   → Estimated cost: **$${m.worker.pricing}**\n`;
-        text += `   → ${Math.round(m.score)}% match: ${m.reasons.join(', ')}\n`;
-        text += '\n';
-      });
-
-      if (matches.length > 5) {
-        text += `_Showing top 5 of ${matches.length} matching workers_\n\n`;
-      }
-
-      text += '**Ready to proceed?**\n';
-      text += "I can hire one of these experts for you. They'll complete the work and you only pay when satisfied.\n";
-
-      return {
-        content: [{ type: 'text', text }],
-      };
-    }
-
+  private async hireWorker(_args: { task: string }) {
     return {
       content: [
         {
           type: 'text',
-          text: match.message || 'No match found',
+          text: [
+            'Worker marketplace coming soon.',
+            '',
+            'For now, use `solve` to find available skills and CLI tools that can help with your task.',
+          ].join('\n'),
         },
       ],
     };
@@ -347,13 +375,11 @@ class MentatServer {
       throw new Error(`Approval failed: ${response.statusText}`);
     }
 
-    const { job } = await response.json();
-
     return {
       content: [
         {
           type: 'text',
-          text: `✓ Job approved!\n\nPayment released to worker.\nRating: ${args.rating}/5`,
+          text: `Job approved. Payment released to worker. Rating: ${args.rating}/5`,
         },
       ],
     };
@@ -382,7 +408,7 @@ class MentatServer {
       content: [
         {
           type: 'text',
-          text: `✓ Job rejected.\n\nFunds refunded to your wallet.`,
+          text: `Job rejected. Funds refunded to your wallet.`,
         },
       ],
     };
@@ -421,7 +447,7 @@ class MentatServer {
       content: [
         {
           type: 'text',
-          text: `Wallet Balance: $${balance.toFixed(2)}\n${needsTopUp ? '\n⚠️ Low balance - consider topping up' : ''}`,
+          text: `Wallet Balance: $${balance.toFixed(2)}\n${needsTopUp ? '\nLow balance - consider topping up' : ''}`,
         },
       ],
     };

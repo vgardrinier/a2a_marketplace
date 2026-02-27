@@ -1,0 +1,20 @@
+entry:
+  id: send-email
+  type: skill
+  name: Send Email
+  description: Use when sending transactional emails (welcome messages, order
+    confirmations, password resets, receipts), notifications, or bulk emails via
+    Resend API.
+  source: github:resend/resend-skills/send-email
+  stars: 63
+  detect:
+    dependencies:
+      - resend
+    files:
+      - pyproject.toml
+      - Cargo.toml
+  context_patterns:
+    - "**/*.tsx"
+    - "**/*.jsx"
+    - "**/*.ts"
+    - "**/*.py"

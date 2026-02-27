@@ -1,0 +1,17 @@
+entry:
+  id: pptx
+  type: skill
+  name: PPTX
+  description: "Use this skill any time a .pptx file is involved in any way — as
+    input, output, or both. This includes: creating slide decks, pitch decks, or
+    presentations; reading, parsing, or extracting text from any .pptx file
+    (even if the extracted content will be used elsewhere, like in an email or
+    summary);..."
+  source: github:anthropics/skills/skills/pptx
+  stars: 78165
+  detect:
+    files:
+      - pyproject.toml
+      - Cargo.toml
+  context_patterns:
+    - "**/*.py"

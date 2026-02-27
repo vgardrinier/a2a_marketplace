@@ -1,0 +1,17 @@
+entry:
+  id: templates
+  type: skill
+  name: Templates
+  description: Use when creating, updating, publishing, deleting, or listing
+    Resend email templates via the API, or when defining template variables,
+    understanding draft vs published state, or managing template lifecycle
+    programmatically.
+  source: github:resend/resend-skills/templates
+  stars: 63
+  detect:
+    dependencies:
+      - resend
+  context_patterns:
+    - "**/*.tsx"
+    - "**/*.jsx"
+    - "**/*.ts"
